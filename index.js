@@ -90,6 +90,28 @@ async function run() {
       res.send(result);
     });
 
+    // Cancel a booking
+  app.delete("/cancel-booking/:id", async (req, res) => {
+    const id = req.params.id;
+
+    // Find booking and update room availability
+    const booking = await bookingsCollection.findOne({
+      _id: new ObjectId(id),
+    });
+    if (booking) {
+      await roomsCollection.updateOne(
+        { _id: new ObjectId(booking.roomId) },
+        { $set: { isAvailable: true } }
+      );
+    }
+
+    // Delete booking
+    const result = await bookingsCollection.deleteOne({
+      _id: new ObjectId(id),
+    });
+    res.send(result);
+  });
+
     
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
