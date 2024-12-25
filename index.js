@@ -125,6 +125,44 @@ async function run() {
     res.send(result);
   });
 
+  // Post a review
+  app.post("/reviews", async (req, res) => {
+    const { roomId, username, rating, comment, timestamp, userPhoto } = req.body;
+
+    const review = {
+      roomId,
+      username,
+      userPhoto,
+      rating,
+      comment,
+      timestamp,
+    };
+
+    const result = await reviewsCollection.insertOne(review);
+    res.send(result);
+  });
+
+  // Get all reviews
+  app.get("/reviews", async (req, res) => {
+    try {
+      const result = await reviewsCollection
+        .find()
+        .sort({ timestamp: -1 })
+        .toArray();
+      res.send(result);
+    } catch (error) {
+      console.error("Error fetching reviews:", error);
+      res.status(500).send({ message: "Error fetching reviews" });
+    }
+  });
+
+  // Get reviews for a specific room
+  app.get("/reviews/:roomId", async (req, res) => {
+    const roomId = req.params.roomId;
+    const result = await reviewsCollection.find({ roomId }).toArray();
+    res.send(result);
+  });
+
     
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
