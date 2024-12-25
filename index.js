@@ -29,6 +29,21 @@ async function run() {
     const bookingsCollection = database.collection("bookings");
     const reviewsCollection = database.collection("reviews");
 
+    app.get("/featured-rooms", async (req, res) => {
+      try {
+        const result = await roomsCollection
+          .find() 
+          .sort({ totalReviews: -1 }) 
+          .limit(6) 
+          .toArray();
+        res.send(result);
+      } catch (error) {
+        console.error("Error fetching featured rooms:", error);
+        res.status(500).send({ message: "Error fetching featured rooms." });
+      }
+    });
+    
+
     // rooms apis
     app.get("/rooms", async (req, res) => {
       const { minPrice, maxPrice } = req.query; 
