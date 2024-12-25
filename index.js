@@ -112,6 +112,19 @@ async function run() {
     res.send(result);
   });
 
+  // Update booking date
+  app.patch("/update-booking/:id", async (req, res) => {
+    const id = req.params.id;
+    const { selectedDate } = req.body;
+
+    const result = await bookingsCollection.updateOne(
+      { _id: new ObjectId(id) },
+      { $set: { selectedDate } }
+    );
+
+    res.send(result);
+  });
+
     
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
