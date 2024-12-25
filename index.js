@@ -2,11 +2,20 @@ require("dotenv").config();
 const express = require("express");
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const cors = require("cors");
+const jwt = require('jsonwebtoken')
+const cookieParser = require('cookie-parser')
 const port = process.env.PORT || 5000;
 const app = express();
 
-app.use(cors());
+const corsOptions = {
+  origin: ['http://localhost:5173'],
+  credentials: true,
+  optionalSuccessStatus: 200,
+}
+
+app.use(cors(corsOptions));
 app.use(express.json());
+app.use(cookieParser())
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.8kdu5.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
@@ -19,15 +28,54 @@ const client = new MongoClient(uri, {
   },
 });
 
+// verifyToken
+const verifyToken = (req, res, next) => {
+  const token = req.cookies?.token
+  if (!token) return res.status(401).send({ message: 'unauthorized access' })
+  jwt.verify(token, process.env.SECRET_KEY, (err, decoded) => {
+    if (err) {
+      return res.status(401).send({ message: 'unauthorized access' })
+    }
+    req.user = decoded
+  })
+
+  next()
+}
+
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
+    // await client.connect();
 
     const database = client.db("luxewayDb");
     const roomsCollection = database.collection("rooms");
     const bookingsCollection = database.collection("bookings");
     const reviewsCollection = database.collection("reviews");
+
+    // generate jwt token
+    app.post('/jwt', async(req, res) => {
+      const email = req.body
+      const token = jwt.sign(email, process.env.SECRET_KEY, { expiresIn: '100d' })
+      res
+      .cookie('token', token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
+      })
+      .send({ success: true })
+    })
+
+    // logout || clear cookie from browser
+    app.get('/logout', async (req, res) => {
+      res
+        .clearCookie('token', {
+          maxAge: 0,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
+        })
+        .send({ success: true })
+    })
+
 
     app.get("/featured-rooms", async (req, res) => {
       try {
@@ -113,8 +161,14 @@ async function run() {
       }
     });
 
-    app.get("/my-bookings/:email", async (req, res) => {
+    app.get("/my-bookings/:email", verifyToken, async (req, res) => {
       const email = req.params.email;
+      const decodedEmail = req.user?.email;
+
+      if (decodedEmail !== email) {
+        return res.status(401).send({ message: 'unauthorized access' })
+      }
+
       const result = await bookingsCollection.find({ email }).toArray();
       res.send(result);
     });
@@ -194,7 +248,7 @@ async function run() {
 
     
     // Send a ping to confirm a successful connection
-    await client.db("admin").command({ ping: 1 });
+    // await client.db("admin").command({ ping: 1 });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
     );
