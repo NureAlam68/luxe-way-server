@@ -27,6 +27,7 @@ async function run() {
     const database = client.db("luxewayDb");
     const roomsCollection = database.collection("rooms");
     const bookingsCollection = database.collection("bookings");
+    const reviewsCollection = database.collection("reviews");
 
     // rooms apis
     app.get("/rooms", async (req, res) => {
@@ -83,6 +84,13 @@ async function run() {
       }
     });
 
+    app.get("/my-bookings/:email", async (req, res) => {
+      const email = req.params.email;
+      const result = await bookingsCollection.find({ email }).toArray();
+      res.send(result);
+    });
+
+    
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log(
