@@ -31,8 +31,22 @@ async function run() {
 
     // rooms apis
     app.get("/rooms", async (req, res) => {
-      const result = await roomsCollection.find().toArray();
-      res.send(result);
+      const { minPrice, maxPrice } = req.query; 
+    
+      const filters = {};
+      if (minPrice && maxPrice) {
+        filters.pricePerNight = { $gte: Number(minPrice), $lte: Number(maxPrice) };
+      }
+      
+      try {
+        const result = await roomsCollection
+          .find(filters)
+          .toArray();
+        res.send(result);
+      } catch (error) {
+        console.error("Error fetching rooms:", error);
+        res.status(500).send({ message: "Error fetching rooms." });
+      }
     });
 
     app.get("/room/:id", async (req, res) => {
