@@ -5,7 +5,7 @@ LuxeWay is a sleek and modern hotel booking platform designed to provide users w
 ---
 
 ## 🚀 Live Demo  
-👉 **[Visit LuxeWay Live](https://your-live-url.com)**  
+👉 **[Visit LuxeWay Live](https://luxe-way-2a039.web.app/)**  
 
 ---
 
