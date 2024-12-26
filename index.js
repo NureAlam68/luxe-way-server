@@ -8,7 +8,7 @@ const port = process.env.PORT || 5000;
 const app = express();
 
 const corsOptions = {
-  origin: ['http://localhost:5173'],
+  origin: ['http://localhost:5173', 'https://luxe-way-2a039.web.app', 'https://luxe-way-2a039.firebaseapp.com'],
   credentials: true,
   optionalSuccessStatus: 200,
 }
@@ -65,6 +65,7 @@ async function run() {
       .send({ success: true })
     })
 
+    
     // logout || clear cookie from browser
     app.get('/logout', async (req, res) => {
       res
