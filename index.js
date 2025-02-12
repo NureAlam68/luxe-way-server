@@ -94,24 +94,33 @@ async function run() {
     
 
     // rooms apis
+
     app.get("/rooms", async (req, res) => {
-      const { minPrice, maxPrice } = req.query; 
+      const { minPrice, maxPrice, sortOrder } = req.query;
     
       const filters = {};
       if (minPrice && maxPrice) {
         filters.pricePerNight = { $gte: Number(minPrice), $lte: Number(maxPrice) };
       }
-      
+    
       try {
-        const result = await roomsCollection
-          .find(filters)
-          .toArray();
+        let query = roomsCollection.find(filters);
+    
+        // Apply sorting if sortOrder is provided
+        if (sortOrder === "asc") {
+          query = query.sort({ pricePerNight: 1 }); // Ascending
+        } else if (sortOrder === "desc") {
+          query = query.sort({ pricePerNight: -1 }); // Descending
+        }
+    
+        const result = await query.toArray();
         res.send(result);
       } catch (error) {
         console.error("Error fetching rooms:", error);
         res.status(500).send({ message: "Error fetching rooms." });
       }
     });
+    
 
     app.get("/room/:id", async (req, res) => {
       const id = req.params.id;
