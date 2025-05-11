@@ -83,7 +83,7 @@ async function run() {
         const result = await roomsCollection
           .find() 
           .sort({ totalReviews: -1 }) 
-          .limit(6) 
+          .limit(8) 
           .toArray();
         res.send(result);
       } catch (error) {
